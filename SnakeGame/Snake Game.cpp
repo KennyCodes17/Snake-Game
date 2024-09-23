@@ -3,6 +3,7 @@
 #include <cstdlib> 
 #include <ctime> 
 #include <iostream>
+#include <conio.h>
 
 using namespace std;
 
@@ -16,7 +17,17 @@ int x, y, fruitX, fruitY, score;
 enum eDirection { STOP = 0, LEFT, RIGHT, UP, DOWN };
 eDirection dir;
 
-void setup() {
+void spawnApple()
+{
+	do {
+		fruitX = rand() % width;
+		fruitY = rand() % height;
+	} while ((fruitX == 0 || fruitX == width - 1 || fruitY == 0 || fruitY == height - 1) ||
+		(fruitX == x && fruitY == y));
+}
+
+void setup() 
+{
 	gameOver = false;
 	dir = STOP;
 
@@ -25,8 +36,7 @@ void setup() {
 	y = height / 2;
 
 	//Randomly Print fruit
-	fruitX = rand() % width;
-	fruitY = rand() % height;
+	spawnApple();
 	score = 0;
 }
 
@@ -52,6 +62,16 @@ void draw() {
 			{
 				cout << "#";
 			}
+			// DRAW S for Snake
+			else if (i == y && j == x)
+			{
+				cout << "S";
+			}
+			//Draw A for apple
+			else if (i == fruitY && j == fruitX)
+			{
+				cout << "A";
+			}
 			else 
 			{
 				std::cout << " ";
@@ -68,17 +88,40 @@ void draw() {
 	cout << endl;
 }
 
-void input()
-{
-	std::cin.get();
+void input() {
+	if (_kbhit()) {
+		switch (_getch()) 
+		{
+		case 'w': dir = UP; break;
+		case 'a': dir = LEFT; break;
+		case 's': dir = DOWN; break;
+		case 'd': dir = RIGHT; break;
+		case 'x': gameOver = true; break; // Optional: Exit the game
+		}
+	}
 }
 
 void logic()
 {
 
+	switch (dir)
+	{
+	case UP:
+		y--;
+		break;
+	case DOWN:
+		y++;
+		break;
+	case LEFT:
+		x--;
+		break;
+	case RIGHT:
+		x++;
+		break;
+	default:
+		break;
+	}
 }
-
-
 int main()
 {
 	setup();
