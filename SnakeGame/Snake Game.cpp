@@ -11,7 +11,7 @@ bool gameOver;
 
 //Game Board
 const int height = 20;
-const int width = 20;
+const int width = 40;
 int x, y, fruitX, fruitY, score;
 enum eDirection { STOP = 0, LEFT, RIGHT, UP, DOWN };
 eDirection dir;
@@ -39,24 +39,28 @@ void draw() {
 		cout << "#";
 	}
 	cout << endl;
-	//Print side border
-	for (int i = 0; i < width; i++)
+	////Print side border
+	for (int i = 0; i < height; i++)
 	{
-		for (int j = 0; j < height; j++)
+		for (int j = 0; j < width; j++)
 		{
-
 			if (j == 0)
 			{
 				cout << "#";
 			}
-			if (j == width)
+			else if (j == width - 1)
 			{
 				cout << "#";
 			}
+			else 
+			{
+				std::cout << " ";
+			}
 		}
+		std::cout << endl;
 	}
 
-	//print bottom of the border
+	////print bottom of the border
 	for (int i = 0; i < width; i++)
 	{
 		cout << "#";
@@ -66,7 +70,7 @@ void draw() {
 
 void input()
 {
-
+	std::cin.get();
 }
 
 void logic()
@@ -78,11 +82,11 @@ void logic()
 int main()
 {
 	setup();
-	while (!gameOver) {
+	//while (!gameOver) {
 		draw();
 		input();
 		logic();
-	}
+	//}
 
 	return 0;
 }
