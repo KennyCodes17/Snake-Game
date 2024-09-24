@@ -4,6 +4,9 @@
 #include <ctime> 
 #include <iostream>
 #include <conio.h>
+#include <chrono>
+#include <thread>
+#include <windows.h>
 
 using namespace std;
 
@@ -13,123 +16,159 @@ bool gameOver;
 //Game Board
 const int height = 20;
 const int width = 40;
-int x, y, fruitX, fruitY, score;
-enum eDirection { STOP = 0, LEFT, RIGHT, UP, DOWN };
-eDirection dir;
+//int x, y, fruitX, fruitY, score;
 
-void spawnApple()
-{
-	do {
-		fruitX = rand() % width;
-		fruitY = rand() % height;
-	} while ((fruitX == 0 || fruitX == width - 1 || fruitY == 0 || fruitY == height - 1) ||
-		(fruitX == x && fruitY == y));
-}
+enum Direction 
+{ 
+	STOP = 0, 
+	LEFT, 
+	RIGHT, 
+	UP, 
+	DOWN 
+};
 
-void setup() 
+void hideCursor();
+
+Direction dir = RIGHT;
+//
+//void spawnApple()
+//{
+//	do 
+//	{
+//		fruitX = rand() % width;
+//		fruitY = rand() % height;
+//	} 
+//	while ((fruitX == 0 || fruitX == width - 1 || fruitY == 0 || fruitY == height - 1) ||
+//		(fruitX == x && fruitY == y));
+//}
+
+void setup()
 {
+	hideCursor();
 	gameOver = false;
 	dir = STOP;
 
-	//Print Snake Head in the middle of the Board
-	x = width / 2;
-	y = height / 2;
+	////Print Snake Head in the middle of the Board
+	//x = width / 2;
+	//y = height / 2;
 
-	//Randomly Print fruit
-	spawnApple();
-	score = 0;
+	////Randomly Print fruit
+	//spawnApple();
+	//score = 0;
 }
 
-void draw() {
-	system("cls");
+void setCursorPosition(int x, int y) {
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	COORD position = { static_cast<SHORT>(x), static_cast<SHORT>(y) };
+	SetConsoleCursorPosition(hConsole, position);
+}
 
-	//print top of the border
-	for (int i = 0; i < width; i++)
+void hideCursor() {
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	CONSOLE_CURSOR_INFO cursorInfo;
+	GetConsoleCursorInfo(hConsole, &cursorInfo);
+	cursorInfo.bVisible = FALSE; // Set the cursor visibility to false
+	SetConsoleCursorInfo(hConsole, &cursorInfo);
+}
+
+void print(std::string s)
+{
+	std::cout << s;
+}
+
+bool drawBorder(int x, int y)
+{
+	if (x == 0 
+		|| y == 0
+		|| x == width - 1
+		|| y == height - 1)
 	{
-		cout << "#";
+		print("#");
+		return true;
 	}
-	cout << endl;
-	////Print side border
-	for (int i = 0; i < height; i++)
+
+	return false;
+}
+
+bool drawSnake(int x, int y, int snakeX, int snakeY)
+{
+	if (x == snakeX && y == snakeY)
 	{
-		for (int j = 0; j < width; j++)
+		print("s");
+		return true;
+	}
+
+	return false;
+}
+
+void draw() 
+{
+	setCursorPosition(0, 0);
+
+	int snakeX = width / 2;
+	int snakeY = height / 2;
+
+	// Print side border
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width; x++)
 		{
-			if (j == 0)
+			if (!drawBorder(x, y) && !drawSnake(x, y, snakeX, snakeY))
 			{
-				cout << "#";
-			}
-			else if (j == width - 1)
-			{
-				cout << "#";
-			}
-			// DRAW S for Snake
-			else if (i == y && j == x)
-			{
-				cout << "S";
-			}
-			//Draw A for apple
-			else if (i == fruitY && j == fruitX)
-			{
-				cout << "A";
-			}
-			else 
-			{
-				std::cout << " ";
+				print(" ");
 			}
 		}
 		std::cout << endl;
 	}
 
-	////print bottom of the border
-	for (int i = 0; i < width; i++)
-	{
-		cout << "#";
-	}
 	cout << endl;
 }
 
-void input() {
-	if (_kbhit()) {
-		switch (_getch()) 
+void input() 
+{
+	if (_kbhit()) 
+	{
+		switch (_getch())
 		{
-		case 'w': dir = UP; break;
-		case 'a': dir = LEFT; break;
-		case 's': dir = DOWN; break;
-		case 'd': dir = RIGHT; break;
-		case 'x': gameOver = true; break; // Optional: Exit the game
+			case 'w': dir = UP; break;
+			case 'a': dir = LEFT; break;
+			case 's': dir = DOWN; break;
+			case 'd': dir = RIGHT; break;
+			case 'x': gameOver = true; break; // Optional: Exit the game
 		}
 	}
 }
 
 void logic()
 {
-
 	switch (dir)
 	{
-	case UP:
-		y--;
-		break;
-	case DOWN:
-		y++;
-		break;
-	case LEFT:
-		x--;
-		break;
-	case RIGHT:
-		x++;
-		break;
-	default:
-		break;
+		case UP:
+			//y--;
+			break;
+		case DOWN:
+			//++;
+			break;
+		case LEFT:
+			//x--;
+			break;
+		case RIGHT:
+			//x++;
+			break;
+		default:
+			break;
 	}
 }
+
 int main()
 {
 	setup();
-	//while (!gameOver) {
+	while (!gameOver) {
 		draw();
 		input();
 		logic();
-	//}
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 
 	return 0;
 }
