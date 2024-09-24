@@ -29,7 +29,7 @@ enum Direction
 
 void hideCursor();
 
-Direction dir = RIGHT;
+Direction dir = STOP;
 //
 //void spawnApple()
 //{
@@ -101,12 +101,9 @@ bool drawSnake(int x, int y, int snakeX, int snakeY)
 	return false;
 }
 
-void draw() 
+void draw(int snakeX, int snakeY) 
 {
 	setCursorPosition(0, 0);
-
-	int snakeX = width / 2;
-	int snakeY = height / 2;
 
 	// Print side border
 	for (int y = 0; y < height; y++)
@@ -139,21 +136,21 @@ void input()
 	}
 }
 
-void logic()
+void logic(int &snakeX, int &snakeY)
 {
 	switch (dir)
 	{
 		case UP:
-			//y--;
+			snakeY--;
 			break;
 		case DOWN:
-			//++;
+			snakeY++;
 			break;
 		case LEFT:
-			//x--;
+			snakeX--;
 			break;
 		case RIGHT:
-			//x++;
+			snakeX++;
 			break;
 		default:
 			break;
@@ -163,11 +160,15 @@ void logic()
 int main()
 {
 	setup();
+
+	int snakeX = width / 2;
+	int snakeY = height / 2;
+
 	while (!gameOver) {
-		draw();
+		draw(snakeX, snakeY);
 		input();
-		logic();
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		logic(snakeX, snakeY);
+		std::this_thread::sleep_for(std::chrono::milliseconds(200));
 	}
 
 	return 0;
