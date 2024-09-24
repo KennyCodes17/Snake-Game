@@ -18,13 +18,13 @@ const int height = 20;
 const int width = 40;
 //int x, y, fruitX, fruitY, score;
 
-enum Direction 
-{ 
-	STOP = 0, 
-	LEFT, 
-	RIGHT, 
-	UP, 
-	DOWN 
+enum Direction
+{
+	STOP = 0,
+	LEFT,
+	RIGHT,
+	UP,
+	DOWN
 };
 
 void hideCursor();
@@ -69,7 +69,7 @@ void print(std::string s)
 
 bool drawBorder(int x, int y)
 {
-	if (x == 0 
+	if (x == 0
 		|| y == 0
 		|| x == width - 1
 		|| y == height - 1)
@@ -92,7 +92,18 @@ bool drawSnake(int x, int y, int snakeX, int snakeY)
 	return false;
 }
 
-void draw(int snakeX, int snakeY) 
+bool drawApple(int x, int y, int appleX, int appleY)
+{
+	if (x == appleX && y == appleY)
+	{
+		print("A");
+		return true;
+	}
+
+	return false;
+}
+
+void draw(int snakeX, int snakeY, int appleX, int appleY)
 {
 	setCursorPosition(0, 0);
 
@@ -101,7 +112,9 @@ void draw(int snakeX, int snakeY)
 	{
 		for (int x = 0; x < width; x++)
 		{
-			if (!drawBorder(x, y) && !drawSnake(x, y, snakeX, snakeY))
+			if (!drawBorder(x, y)
+				&& !drawSnake(x, y, snakeX, snakeY)
+				&& !drawApple(x, y, appleX, appleY))
 			{
 				print(" ");
 			}
@@ -112,41 +125,41 @@ void draw(int snakeX, int snakeY)
 	cout << endl;
 }
 
-void input() 
+void input()
 {
-	if (_kbhit()) 
+	if (_kbhit())
 	{
 		switch (_getch())
 		{
-			case 'w': dir = UP; break;
-			case 'a': dir = LEFT; break;
-			case 's': dir = DOWN; break;
-			case 'd': dir = RIGHT; break;
-			case 'x': gameOver = true; break; // Optional: Exit the game
+		case 'w': dir = UP; break;
+		case 'a': dir = LEFT; break;
+		case 's': dir = DOWN; break;
+		case 'd': dir = RIGHT; break;
+		case 'x': gameOver = true; break; // Optional: Exit the game
 		}
 	}
 }
 
-void logic(int &snakeX, int &snakeY)
+void logic(int& snakeX, int& snakeY)
 {
 	switch (dir)
 	{
-		case UP:
-			snakeY--;
-			break;
-		case DOWN:
-			snakeY++;
-			break;
-		case LEFT:
-			snakeX--;
-			break;
-		case RIGHT:
-			snakeX++;
-			break;
-		default:
-			break;
+	case UP:
+		snakeY--;
+		break;
+	case DOWN:
+		snakeY++;
+		break;
+	case LEFT:
+		snakeX--;
+		break;
+	case RIGHT:
+		snakeX++;
+		break;
+	default:
+		break;
 	}
-	
+
 	if (checkBorder(snakeX, snakeY))
 	{
 		gameOver = true;
@@ -158,11 +171,13 @@ int main()
 {
 	setup();
 
+	int appleX = rand() % (width - 2) + 1;
+	int appleY = rand() % (height - 2) + 1;
 	int snakeX = width / 2;
 	int snakeY = height / 2;
 
 	while (!gameOver) {
-		draw(snakeX, snakeY);
+		draw(snakeX, snakeY, appleX, appleY);
 		input();
 		logic(snakeX, snakeY);
 		std::this_thread::sleep_for(std::chrono::milliseconds(200));
