@@ -30,17 +30,6 @@ enum Direction
 void hideCursor();
 
 Direction dir = STOP;
-//
-//void spawnApple()
-//{
-//	do 
-//	{
-//		fruitX = rand() % width;
-//		fruitY = rand() % height;
-//	} 
-//	while ((fruitX == 0 || fruitX == width - 1 || fruitY == 0 || fruitY == height - 1) ||
-//		(fruitX == x && fruitY == y));
-//}
 
 void setup()
 {
@@ -48,13 +37,6 @@ void setup()
 	gameOver = false;
 	dir = STOP;
 
-	////Print Snake Head in the middle of the Board
-	//x = width / 2;
-	//y = height / 2;
-
-	////Randomly Print fruit
-	//spawnApple();
-	//score = 0;
 }
 
 void setCursorPosition(int x, int y) {
@@ -69,6 +51,15 @@ void hideCursor() {
 	GetConsoleCursorInfo(hConsole, &cursorInfo);
 	cursorInfo.bVisible = FALSE; // Set the cursor visibility to false
 	SetConsoleCursorInfo(hConsole, &cursorInfo);
+}
+
+bool checkBorder(int x, int y)
+{
+	if (x == 0 || x == width - 1 || y == 0 || y == height - 1)
+	{
+		return true;
+	}
+	return false;
 }
 
 void print(std::string s)
@@ -154,6 +145,12 @@ void logic(int &snakeX, int &snakeY)
 			break;
 		default:
 			break;
+	}
+	
+	if (checkBorder(snakeX, snakeY))
+	{
+		gameOver = true;
+		print("Game Over");
 	}
 }
 
