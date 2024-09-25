@@ -31,6 +31,12 @@ void hideCursor();
 
 Direction dir = STOP;
 
+void getNextAppleCoordinates(int& appleX, int& appleY)
+{
+	appleX = rand() % (width - 2) + 1;
+	appleY = rand() % (height - 2) + 1;
+}
+
 void setup()
 {
 	hideCursor();
@@ -103,6 +109,15 @@ bool drawApple(int x, int y, int appleX, int appleY)
 	return false;
 }
 
+bool appleCollision(int appleX, int appleY, int snakeX, int snakeY)
+{
+	if (appleX == snakeX && appleY == snakeY)
+	{
+		return true;
+	}
+	return false;
+}
+
 void draw(int snakeX, int snakeY, int appleX, int appleY)
 {
 	setCursorPosition(0, 0);
@@ -140,7 +155,7 @@ void input()
 	}
 }
 
-void logic(int& snakeX, int& snakeY)
+void logic(int& appleX, int& appleY, int& snakeX, int& snakeY)
 {
 	switch (dir)
 	{
@@ -163,7 +178,11 @@ void logic(int& snakeX, int& snakeY)
 	if (checkBorder(snakeX, snakeY))
 	{
 		gameOver = true;
-		print("Game Over");
+	}
+
+	if (appleCollision(appleX, appleY, snakeX, snakeY))
+	{
+		getNextAppleCoordinates(appleX, appleY);
 	}
 }
 
@@ -171,18 +190,22 @@ int main()
 {
 	setup();
 
-	int appleX = rand() % (width - 2) + 1;
-	int appleY = rand() % (height - 2) + 1;
 	int snakeX = width / 2;
 	int snakeY = height / 2;
+	int appleX = 0;
+	int appleY = 0;
 
-	while (!gameOver) {
-		draw(snakeX, snakeY, appleX, appleY);
+	getNextAppleCoordinates(appleX, appleY);
+
+	while (!gameOver) 
+	{
 		input();
-		logic(snakeX, snakeY);
+		logic(appleX, appleY, snakeX, snakeY);
+		draw(snakeX, snakeY, appleX, appleY);
 		std::this_thread::sleep_for(std::chrono::milliseconds(200));
 	}
 
+	print("Game Over");
 	return 0;
 }
 
