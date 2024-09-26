@@ -12,6 +12,7 @@ using namespace std;
 
 //Game Over
 bool gameOver;
+bool gamePause;
 
 //Game Board
 const int height = 20;
@@ -70,9 +71,16 @@ bool checkBorder(int x, int y)
 	return false;
 }
 
-bool checkSnakeSelfCollision(vector<pai<int, int>>& snake)
+bool checkSnakeSelfCollision(vector<pair<int, int>>& snake)
 {
-
+	for (int i = 1; i < snake.size() - 1; i++)
+	{
+		if (snake[0].first == snake[i].first && snake[0].second == snake[i].second)
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
 void print(std::string s)
@@ -116,7 +124,7 @@ bool drawApple(int x, int y, int appleX, int appleY)
 {
 	if (x == appleX && y == appleY)
 	{
-		print("a");
+		print("o");
 		return true;
 	}
 
@@ -164,6 +172,7 @@ void input()
 		case 'a': dir = LEFT; break;
 		case 's': dir = DOWN; break;
 		case 'd': dir = RIGHT; break;
+		case ' ': gamePause = !gamePause; break;
 		case 'x': gameOver = true; break; // Optional: Exit the game
 		}
 	}
@@ -171,7 +180,7 @@ void input()
 
 void logic(int& appleX, int& appleY, vector<pair<int, int>>& snake)
 {
-	for (int i = snake.size() - 1; i > 0; i--)
+	for (size_t i = snake.size() - 1; i > 0; i--)
 	{
 		snake[i] = snake[i - 1];
 	}
@@ -208,14 +217,65 @@ void logic(int& appleX, int& appleY, vector<pair<int, int>>& snake)
 	{
 		getNextAppleCoordinates(appleX, appleY);
 		addSnakeSegment(snake);
-		cout << "Apple eaten! New segment added. Total segments: " << snake.size() << endl;
 	}
 }
 
+vector <std::string> collectUserName()
+{
+	std::string input;
+	vector <std::string> initials;
+	print("Type in your initials: ");
+	print("Then press 'Enter' to play: ");
+	std::cin >> input;
+	initials.push_back(input);
+	return initials;
+}
+
+
+void splashScreen()
+{
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+
+	// Set the color to your desired color, e.g., Bright Green
+	SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+		print("##############################################\n");
+		print("#                                            #\n");
+		print("#    sss   nn   nn     a     kk   kk  eeeee  #\n");
+		print("#   sssss  nn   nn    aaa    kk  kk   eeeee  #\n");
+		print("#  ss      nnn  nn   a   a   kk kk    e      #\n");
+		print("#   sssss  nn n nn  aaaaaaa  kKKK     eeee   #\n");
+		print("#       ss nn  nnn  aa   aa  kK  Kk   ee     #\n");
+		print("#   sssss  nn   nn  aa   aa  kK   Kk  eeeee  #\n");
+		print("#    sss   nn   nn  aa   aa  kk    kk eeeee  #\n");
+		print("#                                            #\n");
+		print("#       gggg       aa     mm   mm  eeeee     #\n");
+		print("#     gg   gg     aaaa    mmm mmm  eeeee     #\n");
+		print("#    gg          a    a   mm m mm  e         #\n");
+		print("#    gg   ggg   aaaaaaaa  mm   mm  eeee      #\n");
+		print("#    gg    gg   aa    aa  mm   mm  ee        #\n");
+		print("#     gg   gg   aa    aa  mm   mm  eeeee     #\n");
+		print("#       ggggg   aa    aa  mm   mm  eeeee     #\n");
+		print("#                                            #\n");
+		print("#                                            #\n");
+		print("#                By: Kenny G                 #\n");
+		print("#                                            #\n");
+		print("#                                            #\n");
+		print("#         'Press Enter to Continue'          #\n");
+		print("#                                            #\n");
+		print("##############################################\n");
+
+}
+
+
 int main()
 {
+	//Generate different seed
+	srand(static_cast<unsigned int>(time(0)));
 	//Snake Vector
 	vector<pair<int, int>> snake;
+	
+	//player initials
+	vector <std::string> playerInitials;
 
 	setup(snake);
 
@@ -223,15 +283,57 @@ int main()
 	int snakeY = height / 2;
 	int appleX = 0;
 	int appleY = 0;
+	bool beginGame = true;
+	char keyEnter;
 
 	getNextAppleCoordinates(appleX, appleY);
+
+	while (beginGame)
+	{
+		//display splash screen
+		splashScreen();
+		//wait for user input to continue
+		keyEnter = _getch();
+		//check for valid key
+		if (keyEnter == ' ' || keyEnter == '\r')
+		{
+			//clear screen
+			system("cls");
+			//Collect player Initials
+			playerInitials = collectUserName();
+			//clear screen again
+			system("cls");
+			beginGame = false;
+		}
+		//check if user enters ESC -- End Game
+		else if (keyEnter == 27)
+		{
+			gameOver = true;
+		}
+	}
 
 	while (!gameOver) 
 	{
 		input();
-		logic(appleX, appleY, snake);
-		draw(appleX, appleY, snake);
-		std::this_thread::sleep_for(std::chrono::milliseconds(200));
+		if (!gamePause)
+		{
+			//This removes the Pause Message
+			setCursorPosition(0, height + 1); 
+			print("                                                 ");
+			logic(appleX, appleY, snake);
+			draw(appleX, appleY, snake);
+			std::this_thread::sleep_for(std::chrono::milliseconds(300));
+
+			if (checkSnakeSelfCollision(snake))
+			{
+				gameOver = true;
+			}
+		}
+		else
+		{
+			setCursorPosition(0, height + 1);
+			print(" Game has been Pause: Press Space Bar to continue");
+		}
 	}
 
 	print("Game Over");
