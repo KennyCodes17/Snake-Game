@@ -37,8 +37,9 @@ Direction dir = STOP;
 
 void getNextAppleCoordinates(int& appleX, int& appleY, int offsetX, int offsetY)
 {
-	appleX = rand() % (width - 2) + offsetX + 1;
-	appleY = rand() % (height - 2) + offsetY + 1;
+	appleX = rand() % (width - offsetX - 2) + offsetX + 1;
+	appleY = rand() % (height - offsetY - 2) + offsetY + 1;
+
 }
 
 void setup(vector<pair<int, int>>& snake)
@@ -47,8 +48,7 @@ void setup(vector<pair<int, int>>& snake)
 	gameOver = false;
 	dir = STOP;
 
-	snake.push_back(make_pair(width / 2, height / 2));
-
+	snake.push_back(make_pair(width / 2 + offsetX, height / 2 + offsetY));
 }
 
 void setCursorPosition(int x, int y) {
@@ -67,14 +67,12 @@ void hideCursor() {
 
 bool checkBorder(int x, int y)
 {
-	if (x == 0 
-		|| x == width - 1 + offsetX 
-		|| y == 0 
-		|| y == height - 1 + offsetY)
+	// Use precise boundary conditions with offsets
+	if (x <= offsetX || x >= width + offsetX - 1 || y <= offsetY || y >= height + offsetY - 1)
 	{
-		return true;
+		return true; // Out of bounds
 	}
-	return false;
+	return false; // Inside bounds
 }
 
 
@@ -127,7 +125,11 @@ void addSnakeSegment(vector<pair<int, int>>& snake)
 
 bool drawApple(int x, int y, int appleX, int appleY)
 {
-	if (x == appleX && y == appleY)
+	if (x == appleX && y == appleY 
+		&& x > 0 
+		&& x < width - 1 
+		&& y > 0 
+		&& y < height - 1)
 	{
 		print("o");
 		return true;
@@ -185,17 +187,16 @@ void input()
 	}
 }
 
-void gameScore(int appleX, int appleY, vector<pair<int, int>>& snake, int& score)
+void gameScore(int& score)
 {
 
-	if (appleCollision(appleX, appleY, snake))
-	{
-		score = score + 10;
-	}
+	score = score + 10;
+	setCursorPosition(0, 0);
+
 }
 
 
-void logic(int& appleX, int& appleY, vector<pair<int, int>>& snake, int &score, vector <std::string> playerInitials)
+void logic(int& appleX, int& appleY, vector<pair<int, int>>& snake, int& score, vector <std::string> playerInitials)
 {
 	for (size_t i = snake.size() - 1; i > 0; i--)
 	{
@@ -204,25 +205,35 @@ void logic(int& appleX, int& appleY, vector<pair<int, int>>& snake, int &score, 
 
 	switch (dir)
 	{
-	//Y coordinate stored in second element of the vector
+		//Y coordinate stored in second element of the vector
 	case UP:
 		snake[0].second--;
 		break;
-	//Y coordinate stored in second element of the vector
+		//Y coordinate stored in second element of the vector
 	case DOWN:
 		snake[0].second++;
 		break;
-	//X coordinate stored in first element of the vector
+		//X coordinate stored in first element of the vector
 	case LEFT:
 		snake[0].first--;
 		break;
-	//X coordinate stored in first element of the vector
+		//X coordinate stored in first element of the vector
 	case RIGHT:
 		snake[0].first++;
 		break;
 	default:
 		break;
 	}
+
+	//print players name
+	setCursorPosition(5, 1);
+	print("Player: ");
+	std::cout << playerInitials[0];
+
+	//print game score
+	setCursorPosition(40, 1); // Move cursor below the rectangle
+	print("SCORE: ");
+	std::cout << score;
 
 	//END GAME if collides with border
 	if (checkBorder(snake[0].first, snake[0].second))
@@ -237,17 +248,8 @@ void logic(int& appleX, int& appleY, vector<pair<int, int>>& snake, int &score, 
 		//add snake segment
 		addSnakeSegment(snake);
 		//update game score
-		gameScore(appleX, appleY, snake, score);
+		gameScore(score);
 	}
-	//print players name
-	setCursorPosition(2, 1);
-	print("Player: ");
-	//std::cout<< playerInitials;
-
-	//print game score
-	setCursorPosition(35,1); // Move cursor below the rectangle
-	print("SCORE: ");
-	std::cout << score;
 }
 
 vector <std::string> collectUserName()
@@ -284,6 +286,34 @@ vector <std::string> collectUserName()
 	return initials;
 }
 
+void gameOverScreen()
+{
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_INTENSITY);
+	print("                                                   \n");
+	print("     ########################################\n");
+	print("     #                                        #\n");
+	print("     #                                        #\n");
+	print("     #   gggggg      a    mm    mm  eeeee     #\n");
+	print("     #  gg    gg    a a   mmm  mmm  eeeee     #\n");
+	print("     #  gg         a   a  mm mm mm  e         #\n");
+	print("     #  gg  gggg  aaaaaaa mm mm mm  eeeee     #\n");
+	print("     #  gg    gg  aa   aa mm mm mm  ee        #\n");
+	print("     #   gggggg   aa   aa mm    mm  eeeee     #\n");
+	print("     #                                        #\n");
+	print("     #    ooooo  vv   vv  eeeee  rrrrrr       #\n");
+	print("     #   oo   oo vv   vv  eeeee  rr  rrr      #\n");
+	print("     #   oo   oo vv   vv  e      rrrrr        #\n");
+	print("     #   oo   oo  vv vv   eeee   rr rr        #\n");
+	print("     #   oo   oo   vvv    ee     rr  rr       #\n");
+	print("     #    ooooo    vvv    eeeee  rr   rr      #\n");
+	print("     #                                        #\n");
+	print("     #                                        #\n");
+	print("     #                                        #\n");
+	print("     #     Press Enter to Exit the Game       #\n");
+	print("     #                                        #\n");
+	print("     ########################################\n");
+}
 
 void splashScreen()
 {
@@ -392,7 +422,8 @@ int main()
 		}
 	}
 
-	print("Game Over");
+	system("cls");
+	gameOverScreen();
 	return 0;
 }
 
