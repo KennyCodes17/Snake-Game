@@ -67,9 +67,9 @@ void hideCursor() {
 
 bool checkBorder(int x, int y)
 {
-	if (x == offsetX 
+	if (x == 0 
 		|| x == width - 1 + offsetX 
-		|| y == offsetY 
+		|| y == 0 
 		|| y == height - 1 + offsetY)
 	{
 		return true;
@@ -95,10 +95,10 @@ void print(std::string s)
 	std::cout << s;
 }
 
-bool drawBorder(int x, int y, int offsetX, int offsetY)
+bool drawBorder(int x, int y)
 {
-	if ((x == offsetX || x == width - 1 + offsetX) ||  
-		(y == offsetY || y == height - 1 + offsetY))  
+	if ((x == 0 || x == width - 1) ||  
+		(y == 0 || y == height - 1))  
 	{
 		print("#");
 		return true;
@@ -152,11 +152,13 @@ void draw(int appleX, int appleY, vector<pair<int, int>>& snake, int offsetX, in
 	// Print game board
 	for (int y = 0; y < height; y++)
 	{
+		setCursorPosition(offsetX, offsetY + y);
+
 		for (int x = 0; x < width; x++)
 		{
-			if (!drawBorder(x + offsetX, y + offsetY, offsetX, offsetY) &&
-				!drawSnake(x + offsetX, y + offsetY, snake) &&
-				!drawApple(x + offsetX, y + offsetY, appleX, appleY))
+			if (!drawBorder(x, y) &&
+				!drawSnake(x, y, snake) &&
+				!drawApple(x, y, appleX, appleY))
 			{
 				print(" ");
 			}
