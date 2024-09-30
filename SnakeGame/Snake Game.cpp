@@ -188,10 +188,8 @@ void input()
 
 void gameScore(int& score)
 {
-
 	score = score + 10;
 	setCursorPosition(0, 0);
-
 }
 
 //speed of the snake increases if the socre is a multiple of 50
@@ -358,16 +356,6 @@ void splashScreen()
 		print("     #                                            #\n");
 		print("     ##############################################\n");
 
-}
-
-//speed of the snake increases if user holds down a key
-void adjustSpeedForKeyHold(char lastKeyPressed, char currentKey, int& currentSpeed, int normalSpeed) {
-	if (currentKey == lastKeyPressed) {
-		currentSpeed = normalSpeed / 2; 
-	}
-	else {
-		currentSpeed = normalSpeed;
-	}
 }
 
 int main()
