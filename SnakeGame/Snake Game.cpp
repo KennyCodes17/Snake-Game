@@ -312,7 +312,7 @@ void gameOverScreen()
 	print("     #                                        #\n");
 	print("     #     Press Enter to Exit the Game       #\n");
 	print("     #                                        #\n");
-	print("     ########################################\n");
+	print("     #########################################\n");
 }
 
 void splashScreen()
@@ -407,7 +407,7 @@ int main()
 			print("                                                 ");
 			logic(appleX, appleY, snake, score, playerInitials);
 			draw(appleX, appleY, snake, offsetX, offsetY);
-			std::this_thread::sleep_for(std::chrono::milliseconds(300));
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
 			if (checkSnakeSelfCollision(snake))
 			{
