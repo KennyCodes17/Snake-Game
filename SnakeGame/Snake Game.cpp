@@ -48,7 +48,7 @@ void setup(vector<pair<int, int>>& snake)
 	gameOver = false;
 	dir = STOP;
 
-	snake.push_back(make_pair(width / 2 + offsetX, height / 2 + offsetY));
+	snake.push_back(make_pair(width / 2 , height / 2 ));
 }
 
 void setCursorPosition(int x, int y) {
@@ -67,8 +67,7 @@ void hideCursor() {
 
 bool checkBorder(int x, int y)
 {
-	// Use precise boundary conditions with offsets
-	if (x <= offsetX || x >= width + offsetX - 1 || y <= offsetY || y >= height + offsetY - 1)
+	if (x < 2  || x >= width - 1 || y < 2 || y >= height - 2)
 	{
 		return true; // Out of bounds
 	}
@@ -195,8 +194,16 @@ void gameScore(int& score)
 
 }
 
+//speed of the snake increases if the socre is a multiple of 50
+int adjustSpeedForScore(int score, int currentSpeed, int minSpeed) {
+	// Increase speed every multiple of 50, decreasing sleep time
+	if (score % 50 == 0 && score != 0 && currentSpeed > minSpeed) {
+		currentSpeed -= 50; // Reduce delay by 50ms
+	}
+	return currentSpeed; // Return updated speed
+}
 
-void logic(int& appleX, int& appleY, vector<pair<int, int>>& snake, int& score, vector <std::string> playerInitials)
+void logic(int& appleX, int& appleY, vector<pair<int, int>>& snake, int& score, vector <std::string> playerInitials, int& currentSpeed, int minSpeed)
 {
 	for (size_t i = snake.size() - 1; i > 0; i--)
 	{
@@ -249,6 +256,8 @@ void logic(int& appleX, int& appleY, vector<pair<int, int>>& snake, int& score, 
 		addSnakeSegment(snake);
 		//update game score
 		gameScore(score);
+		//adjust the speed based on score
+		currentSpeed = adjustSpeedForScore(score, currentSpeed, minSpeed);
 	}
 }
 
@@ -351,6 +360,16 @@ void splashScreen()
 
 }
 
+//speed of the snake increases if user holds down a key
+void adjustSpeedForKeyHold(char lastKeyPressed, char currentKey, int& currentSpeed, int normalSpeed) {
+	if (currentKey == lastKeyPressed) {
+		currentSpeed = normalSpeed / 2; 
+	}
+	else {
+		currentSpeed = normalSpeed;
+	}
+}
+
 int main()
 {
 	//Generate different seed
@@ -370,6 +389,8 @@ int main()
 	bool beginGame = true;
 	char keyEnter;
 	int score = 0;
+	int speed = 800;
+	int minSpeed = 100;
 
 	getNextAppleCoordinates(appleX, appleY, offsetX, offsetY);
 
@@ -404,10 +425,10 @@ int main()
 		{
 			//This removes the Pause Message
 			setCursorPosition(offsetX, height + offsetY + 1);
-			print("                                                 ");
-			logic(appleX, appleY, snake, score, playerInitials);
+			print("                                                   ");
+			logic(appleX, appleY, snake, score, playerInitials, speed, minSpeed);
 			draw(appleX, appleY, snake, offsetX, offsetY);
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			std::this_thread::sleep_for(std::chrono::milliseconds(speed));
 
 			if (checkSnakeSelfCollision(snake))
 			{
@@ -418,7 +439,7 @@ int main()
 		{
 			//Pause game message
 			setCursorPosition(offsetX, height + offsetY + 1);
-			print(" Game has been Pause: Press Space Bar to continue");
+			print(" Game has been Paused: Press Space Bar to continue");
 		}
 	}
 
