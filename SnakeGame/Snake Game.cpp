@@ -136,9 +136,52 @@ bool drawApple(int x, int y, int appleX, int appleY)
 	return false;
 }
 
+void getNextBadAppleCoordinates(int& badAppleX, int& badAppleY, int offsetX, int offsetY, int appleX, int appleY)
+{
+	// Keep generating until the bad apple is not on the same spot as the good apple
+	do 
+	{
+		badAppleX = rand() % (width - offsetX - 2) + offsetX + 1;
+		badAppleY = rand() % (height - offsetY - 2) + offsetY + 1;
+	} while (badAppleX == appleX && badAppleY == appleY); // Re-roll if the same as the good apple
+}
+
+bool drawBadApple(int x, int y, int badAppleX, int badAppleY)
+{
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	// Set text color to red
+	SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_INTENSITY);
+
+	if (x == badAppleX && y == badAppleY
+		&& x > 0
+		&& x < width - 1
+		&& y > 0
+		&& y < height - 1)
+	{
+		print("o"); // Draw the bad apple in red
+
+		// Reset text color to default (usually white or gray)
+		SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+		return true;
+	}
+
+	// Reset text color to default, just in case
+	SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+	return false;
+}
+
 bool appleCollision(int appleX, int appleY, vector<pair<int, int>>& snake)
 {
 	if (appleX == snake[0].first && appleY == snake[0].second)
+	{
+		return true;
+	}
+	return false;
+}
+
+bool badAppleCollision(int badAppleX, int badAppleY, vector<pair<int, int>>& snake)
+{
+	if (badAppleX == snake[0].first && badAppleX == snake[0].second)
 	{
 		return true;
 	}
@@ -168,12 +211,40 @@ void draw(int appleX, int appleY, vector<pair<int, int>>& snake, int offsetX, in
 	cout << endl;
 }
 
+//speed of the snake increases if the socre is a multiple of 50
+int adjustSpeedForScore(int score, int currentSpeed, int minSpeed) {
+	// Increase speed every multiple of 50, decreasing sleep time
+	if (score % 50 == 0 && score != 0 && currentSpeed > minSpeed) {
+		currentSpeed -= 50; // Reduce delay by 50ms
+	}
+	return currentSpeed; // Return updated speed
+}
 
-void input()
+int adjustSpeedForKeyHold(int speed, int minSpeed, int increasedSpeed, int& speedBeforeKeyPress)
+{
+	// Check if any of the directional keys ('W', 'A', 'S', 'D') are being held down
+	if ((GetKeyState('W') & 0x8000) || (GetKeyState('A') & 0x8000) ||
+		(GetKeyState('S') & 0x8000) || (GetKeyState('D') & 0x8000))
+	{
+		// Save the original speed if this is the first time holding the key
+		if (speedBeforeKeyPress == speed) {
+			speedBeforeKeyPress = speed; // Store the original speed before speeding up
+		}
+
+		// Return the increased speed while a directional key is held
+		return increasedSpeed;
+	}
+
+	// If no directional key is being held, revert to the original speed
+	return speedBeforeKeyPress;
+}
+
+char input()
 {
 	if (_kbhit())
 	{
-		switch (_getch())
+		char key = _getch();
+		switch (key)
 		{
 		case 'w': dir = UP; break;
 		case 'a': dir = LEFT; break;
@@ -182,22 +253,15 @@ void input()
 		case ' ': gamePause = !gamePause; break;
 		case 'x': gameOver = true; break; // Optional: Exit the game
 		}
+		return key;  // Return the key pressed
 	}
+	return '\0'; // Return null character if no key is pressed
 }
 
 void gameScore(int& score)
 {
 	score = score + 10;
 	setCursorPosition(0, 0);
-}
-
-//speed of the snake increases if the socre is a multiple of 50
-int adjustSpeedForScore(int score, int currentSpeed, int minSpeed) {
-	// Increase speed every multiple of 50, decreasing sleep time
-	if (score % 50 == 0 && score != 0 && currentSpeed > minSpeed) {
-		currentSpeed -= 50; // Reduce delay by 50ms
-	}
-	return currentSpeed; // Return updated speed
 }
 
 void logic(int& appleX, int& appleY, vector<pair<int, int>>& snake, int& score, vector <std::string> playerInitials, int& currentSpeed, int minSpeed)
@@ -377,7 +441,10 @@ int main()
 	char keyEnter;
 	int score = 0;
 	int speed = 800;
-	int minSpeed = 100;
+	int speedBeforeKeyPress = speed;
+	int increasedSpeed = 50;
+	int minSpeed = 50;
+	char lastKey = '\0';
 
 	getNextAppleCoordinates(appleX, appleY, offsetX, offsetY);
 
@@ -407,12 +474,17 @@ int main()
 
 	while (!gameOver) 
 	{
-		input();
+		char currentKey = input();
 		if (!gamePause)
 		{
 			//This removes the Pause Message
 			setCursorPosition(offsetX, height + offsetY + 1);
 			print("                                                   ");
+			// Call adjustSpeedForKeyHold to manage the speed adjustment logic
+			speed = adjustSpeedForKeyHold(speed, minSpeed, increasedSpeed, speedBeforeKeyPress);
+
+			// Update the lastKey to the current key
+			lastKey = currentKey;
 			logic(appleX, appleY, snake, score, playerInitials, speed, minSpeed);
 			draw(appleX, appleY, snake, offsetX, offsetY);
 			std::this_thread::sleep_for(std::chrono::milliseconds(speed));
