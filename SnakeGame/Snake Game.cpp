@@ -34,18 +34,16 @@ void hideCursor();
 
 Direction dir = STOP;
 
-void getNextAppleCoordinates(int& appleX, int& appleY, int offsetX, int offsetY)
-{
-	appleX = rand() % (width - offsetX - 2) + offsetX + 1;
-	appleY = rand() % (height - offsetY - 2) + offsetY + 1;
-
-}
-
 void setup(vector<pair<int, int>>& snake)
 {
 	hideCursor();
 	gameOver = false;
 	dir = STOP;
+
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+
+	// Set the entire game screen to green
+	SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_INTENSITY);
 
 	snake.push_back(make_pair(width / 2 , height / 2 ));
 }
@@ -66,7 +64,7 @@ void hideCursor() {
 
 bool checkBorder(int x, int y)
 {
-	if (x < 2  || x >= width - 1 || y < 2 || y >= height - 2)
+	if (x < 2  || x >= width - 1 || y < 2 || y >= height - 1)
 	{
 		return true; // Out of bounds
 	}
@@ -136,37 +134,39 @@ bool drawApple(int x, int y, int appleX, int appleY)
 	return false;
 }
 
-void getNextBadAppleCoordinates(int& badAppleX, int& badAppleY, int offsetX, int offsetY, int appleX, int appleY)
+void getNextAppleCoordinates(int& appleX, int& appleY, int offsetX, int offsetY)
 {
-	// Keep generating until the bad apple is not on the same spot as the good apple
-	do 
-	{
+	appleX = rand() % (width - offsetX - 2) + offsetX + 1;
+	appleY = rand() % (height - offsetY - 2) + offsetY + 1;
+}
+
+void getNextBadAppleCoordinates(int& badAppleX, int& badAppleY, int offsetX, int offsetY)
+{
 		badAppleX = rand() % (width - offsetX - 2) + offsetX + 1;
 		badAppleY = rand() % (height - offsetY - 2) + offsetY + 1;
-	} while (badAppleX == appleX && badAppleY == appleY); // Re-roll if the same as the good apple
 }
 
 bool drawBadApple(int x, int y, int badAppleX, int badAppleY)
 {
-	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-	// Set text color to red
-	SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_INTENSITY);
-
 	if (x == badAppleX && y == badAppleY
 		&& x > 0
 		&& x < width - 1
 		&& y > 0
 		&& y < height - 1)
 	{
-		print("o"); // Draw the bad apple in red
+		HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
-		// Reset text color to default (usually white or gray)
-		SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+		// Set the text color to red
+		SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_INTENSITY);
+
+		// Draw the bad apple
+		print("X");
+
+		// Reset the text color back to green
+		SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+
 		return true;
 	}
-
-	// Reset text color to default, just in case
-	SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
 	return false;
 }
 
@@ -181,14 +181,14 @@ bool appleCollision(int appleX, int appleY, vector<pair<int, int>>& snake)
 
 bool badAppleCollision(int badAppleX, int badAppleY, vector<pair<int, int>>& snake)
 {
-	if (badAppleX == snake[0].first && badAppleX == snake[0].second)
+	if (badAppleX == snake[0].first && badAppleY == snake[0].second)
 	{
 		return true;
 	}
 	return false;
 }
 
-void draw(int appleX, int appleY, vector<pair<int, int>>& snake, int offsetX, int offsetY)
+void draw(int appleX, int appleY, vector<pair<int, int>>& snake, int offsetX, int offsetY, int badAppleX, int badAppleY)
 {
 	setCursorPosition(offsetX, offsetY);
 
@@ -199,9 +199,10 @@ void draw(int appleX, int appleY, vector<pair<int, int>>& snake, int offsetX, in
 
 		for (int x = 0; x < width; x++)
 		{
-			if (!drawBorder(x, y) &&
-				!drawSnake(x, y, snake) &&
-				!drawApple(x, y, appleX, appleY))
+			if (!drawBorder(x, y) 
+				&& !drawSnake(x, y, snake) 
+				&& !drawBadApple(x, y, badAppleX, badAppleY)
+				&& !drawApple(x, y, appleX, appleY))
 			{
 				print(" ");
 			}
@@ -264,7 +265,7 @@ void gameScore(int& score)
 	setCursorPosition(0, 0);
 }
 
-void logic(int& appleX, int& appleY, vector<pair<int, int>>& snake, int& score, vector <std::string> playerInitials, int& currentSpeed, int minSpeed)
+void logic(int& appleX, int& appleY, vector<pair<int, int>>& snake, int& score, vector <std::string> playerInitials, int& currentSpeed, int minSpeed, int &badAppleX, int &badAppleY)
 {
 	for (size_t i = snake.size() - 1; i > 0; i--)
 	{
@@ -297,28 +298,40 @@ void logic(int& appleX, int& appleY, vector<pair<int, int>>& snake, int& score, 
 	setCursorPosition(5, 1);
 	print("Player: ");
 	std::cout << playerInitials[0];
+	//print bad apple coordinate
+	setCursorPosition(5, 2);
+	cout << "Bad Apple at (" << badAppleX << ", " << badAppleY << ")\n";
 
 	//print game score
 	setCursorPosition(40, 1); // Move cursor below the rectangle
 	print("SCORE: ");
 	std::cout << score;
+	//print apple coordinates
+	setCursorPosition(40, 2);
+	cout << "Apple at (" << appleX << ", " << appleY << ")\n";
 
 	//END GAME if collides with border
 	if (checkBorder(snake[0].first, snake[0].second))
 	{
 		gameOver = true;
 	}
-
 	if (appleCollision(appleX, appleY, snake))
 	{
 		//generate new apple
 		getNextAppleCoordinates(appleX, appleY, offsetX, offsetY);
-		//add snake segment
+		//generate bad apple
 		addSnakeSegment(snake);
 		//update game score
 		gameScore(score);
 		//adjust the speed based on score
 		currentSpeed = adjustSpeedForScore(score, currentSpeed, minSpeed);
+		//generate bad apple at multiples of 50
+	}
+	// check score has reached a multiple of 50
+	// if so, generate a bad apple and await collision
+	if (score % 50 == 0 && score != 0)
+	{
+		getNextBadAppleCoordinates(badAppleX, badAppleY, offsetX, offsetY);
 	}
 }
 
@@ -437,6 +450,8 @@ int main()
 	int snakeY = height / 2;
 	int appleX = 0;
 	int appleY = 0;
+	int badAppleX = 0;
+	int badAppleY = 0;
 	bool beginGame = true;
 	char keyEnter;
 	int score = 0;
@@ -446,6 +461,7 @@ int main()
 	int minSpeed = 50;
 	char lastKey = '\0';
 
+	//initialize apple
 	getNextAppleCoordinates(appleX, appleY, offsetX, offsetY);
 
 	while (beginGame)
@@ -485,8 +501,8 @@ int main()
 
 			// Update the lastKey to the current key
 			lastKey = currentKey;
-			logic(appleX, appleY, snake, score, playerInitials, speed, minSpeed);
-			draw(appleX, appleY, snake, offsetX, offsetY);
+			logic(appleX, appleY, snake, score, playerInitials, speed, minSpeed, badAppleX, badAppleY);
+			draw(appleX, appleY, snake, offsetX, offsetY, badAppleX, badAppleY);
 			std::this_thread::sleep_for(std::chrono::milliseconds(speed));
 
 			if (checkSnakeSelfCollision(snake))
