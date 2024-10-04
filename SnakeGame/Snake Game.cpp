@@ -91,10 +91,19 @@ void print(std::string s)
 
 bool drawBorder(int x, int y)
 {
-	if ((x == 0 || x == width - 1) ||  
-		(y == 0 || y == height - 1))  
+	if ((x == 0 || x == width - 1) ||
+		(y == 0 || y == height - 1))
 	{
+		HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+
+		// Set the border color to brown
+		SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+
 		print("#");
+
+		// Reset the color back to green for other elements
+		SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+
 		return true;
 	}
 	return false;
@@ -107,12 +116,22 @@ bool drawSnake(int x, int y, vector<pair<int, int>>& snake)
 	{
 		if (x == snake[i].first && y == snake[i].second)
 		{
+			HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+
+			// Set the snake color to white
+			SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+
 			print("s");
+
+			// Reset the color back to green for other elements
+			SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+
 			return true;
 		}
 	}
 	return false;
 }
+
 
 void addSnakeSegment(vector<pair<int, int>>& snake)
 {
@@ -261,11 +280,14 @@ char input()
 
 void gameScore(int& score)
 {
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	//set color
+	SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
 	score = score + 10;
 	setCursorPosition(0, 0);
 }
 
-void logic(int& appleX, int& appleY, vector<pair<int, int>>& snake, int& score, vector <std::string> playerInitials, int& currentSpeed, int minSpeed, int &badAppleX, int &badAppleY)
+void logic(int& appleX, int& appleY, vector<pair<int, int>>& snake, int& score, vector <std::string> playerInitials, int& currentSpeed, int minSpeed, int &badAppleX, int &badAppleY, bool &badAppleGenerated, int &badAppleCounter)
 {
 	for (size_t i = snake.size() - 1; i > 0; i--)
 	{
@@ -293,22 +315,24 @@ void logic(int& appleX, int& appleY, vector<pair<int, int>>& snake, int& score, 
 	default:
 		break;
 	}
+	//set teal color
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
 
 	//print players name
 	setCursorPosition(5, 1);
 	print("Player: ");
 	std::cout << playerInitials[0];
-	//print bad apple coordinate
+
+	//Print bad apple counter
 	setCursorPosition(5, 2);
-	cout << "Bad Apple at (" << badAppleX << ", " << badAppleY << ")\n";
+	print("Bad apples eaten: ");
+	std::cout << badAppleCounter;
 
 	//print game score
 	setCursorPosition(40, 1); // Move cursor below the rectangle
 	print("SCORE: ");
 	std::cout << score;
-	//print apple coordinates
-	setCursorPosition(40, 2);
-	cout << "Apple at (" << appleX << ", " << appleY << ")\n";
 
 	//END GAME if collides with border
 	if (checkBorder(snake[0].first, snake[0].second))
@@ -325,13 +349,24 @@ void logic(int& appleX, int& appleY, vector<pair<int, int>>& snake, int& score, 
 		gameScore(score);
 		//adjust the speed based on score
 		currentSpeed = adjustSpeedForScore(score, currentSpeed, minSpeed);
-		//generate bad apple at multiples of 50
 	}
 	// check score has reached a multiple of 50
 	// if so, generate a bad apple and await collision
-	if (score % 50 == 0 && score != 0)
+	if (score % 10 == 0 && score != 0 && !badAppleGenerated)
 	{
 		getNextBadAppleCoordinates(badAppleX, badAppleY, offsetX, offsetY);
+		badAppleGenerated = true;  //No new bad apple is generated until collision
+	}
+	if (badAppleCollision(badAppleX, badAppleY, snake))
+	{
+		badAppleCounter += 1;
+		badAppleGenerated = false;  // Reset to allow new bad apple generation after another apple is eaten
+		//check if 3 bad apples have been eaten
+		if (badAppleCounter >= 3)
+		{
+			gameOver = true;  // End the game if 3 bad apple collisions occurred
+			// Or any other logic you want to implement
+		}
 	}
 }
 
@@ -355,7 +390,7 @@ vector <std::string> collectUserName()
 
 	// Clear the area below or reposition the cursor for the next message
 	setCursorPosition(6, 8 ); // Move cursor below the rectangle
-	print("Press 'Enter' to play: ");
+	print("Press 'Enter' to continue: ");
 
 	// Wait for the user to press Enter
 	while (true)
@@ -398,12 +433,46 @@ void gameOverScreen()
 	print("     #########################################\n");
 }
 
+void highScoreDisplay()
+{
+
+}
+
+void highScoreTracker(vector <std::string> playerInitials, int&score)
+{
+	for (int i = 0; i < playerInitials.size(); i++) 
+	{
+		
+	}
+}
+
+void printGameRules()
+{
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+
+	SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+	print("                             SNAKE GAME RULES\n");
+	print("                             ----------------\n");
+	print("                                                                                 \n");
+	print("     Press or hold 'A', 'W', 'S', 'D' to control the direction of the snake\n");
+	print("                                                                                 \n");
+	print("                     Avoid all contact with the walls\n");
+	print("                                                                                 \n");
+	print("                    Do not eat more than 3 bad apples\n");
+	print("                                                                                 \n");
+	print("                    Press Space Bar to pause the game\n");
+	print("                                                                                 \n");
+	print("                         Good Luck, Have Fun!\n");
+	print("                                                                                 \n");
+}
+
+
 void splashScreen()
 {
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
 	// Set the color to your desired color, e.g., Bright Green
-	SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+	SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
 		print("                                                   \n");
 		print("     ##############################################\n");
 		print("     #                                            #\n");
@@ -460,6 +529,8 @@ int main()
 	int increasedSpeed = 50;
 	int minSpeed = 50;
 	char lastKey = '\0';
+	bool badAppleGenerated = false;
+	int badAppleCounter = 0;
 
 	//initialize apple
 	getNextAppleCoordinates(appleX, appleY, offsetX, offsetY);
@@ -470,7 +541,6 @@ int main()
 		splashScreen();
 		//wait for user input to continue
 		keyEnter = _getch();
-		//check for valid key
 		if (keyEnter == ' ' || keyEnter == '\r')
 		{
 			//clear screen
@@ -478,6 +548,19 @@ int main()
 			//Collect player Initials
 			playerInitials = collectUserName();
 			//clear screen again
+			system("cls");
+
+			// Print game rules
+			printGameRules();
+
+			// Wait for the user to press Enter or space bar to continue
+			while (true)
+			{
+				char key = _getch();
+				if (key == ' ' || key == '\r') {
+					break;  // Exit loop and start the game when space or Enter is pressed
+				}
+			}
 			system("cls");
 			beginGame = false;
 		}
@@ -501,7 +584,7 @@ int main()
 
 			// Update the lastKey to the current key
 			lastKey = currentKey;
-			logic(appleX, appleY, snake, score, playerInitials, speed, minSpeed, badAppleX, badAppleY);
+			logic(appleX, appleY, snake, score, playerInitials, speed, minSpeed, badAppleX, badAppleY, badAppleGenerated, badAppleCounter);
 			draw(appleX, appleY, snake, offsetX, offsetY, badAppleX, badAppleY);
 			std::this_thread::sleep_for(std::chrono::milliseconds(speed));
 
