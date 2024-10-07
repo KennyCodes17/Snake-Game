@@ -6,6 +6,7 @@
 #include <chrono>
 #include <thread>
 #include <windows.h>
+#include "SpeedController.h"
 
 using namespace std;
 
@@ -19,7 +20,6 @@ const int width = 45;
 //offset the game board
 int offsetX = 5; // Shift 5 columns to the right
 int offsetY = 3; // Shift 3 rows down
-
 
 enum Direction
 {
@@ -231,13 +231,21 @@ void draw(int appleX, int appleY, vector<pair<int, int>>& snake, int offsetX, in
 	cout << endl;
 }
 
-//speed of the snake increases if the socre is a multiple of 50
-int adjustSpeedForScore(int score, int currentSpeed, int minSpeed) {
-	// Increase speed every multiple of 50, decreasing sleep time
-	if (score % 50 == 0 && score != 0 && currentSpeed > minSpeed) {
+int adjustSpeedForScore(int score, int& currentSpeed, int minSpeed) {
+
+	// Decrease speed by 50ms every time the score is a multiple of 10
+	if (score % 10 == 0 && score != 0 && currentSpeed > minSpeed) {
 		currentSpeed -= 50; // Reduce delay by 50ms
+		std::cout << "Speed adjusted! New speed: " << currentSpeed << "ms" << std::endl; // Debug print
 	}
-	return currentSpeed; // Return updated speed
+
+	// Ensure the current speed does not drop below minSpeed (e.g., 50ms)
+	if (currentSpeed < minSpeed) {
+		currentSpeed = minSpeed; // Set currentSpeed to minSpeed
+		std::cout << "Speed is now at minimum allowed: " << currentSpeed << "ms" << std::endl;
+	}
+
+	return currentSpeed;
 }
 
 int adjustSpeedForKeyHold(int speed, int minSpeed, int increasedSpeed, int& speedBeforeKeyPress)
@@ -334,6 +342,10 @@ void logic(int& appleX, int& appleY, vector<pair<int, int>>& snake, int& score, 
 	print("SCORE: ");
 	std::cout << score;
 
+	setCursorPosition(40, 2); // Move the cursor just below the score
+	print("SPEED for key holding: ");
+	std::cout << currentSpeed << "ms"; // Print the current speed
+
 	//END GAME if collides with border
 	if (checkBorder(snake[0].first, snake[0].second))
 	{
@@ -428,23 +440,17 @@ void gameOverScreen()
 	print("     #                                        #\n");
 	print("     #                                        #\n");
 	print("     #                                        #\n");
-	print("     #     Press Enter to Exit the Game       #\n");
+	print("     #  Press Enter to View your Final Score  #\n");
 	print("     #                                        #\n");
 	print("     #########################################\n");
 }
 
-void highScoreDisplay()
+void highScoreDisplay(vector <std::string> playerInitials, int& score)
 {
-
+	print(" Final Game Score: ");
+	std::cout << score;
 }
 
-void highScoreTracker(vector <std::string> playerInitials, int&score)
-{
-	for (int i = 0; i < playerInitials.size(); i++) 
-	{
-		
-	}
-}
 
 void printGameRules()
 {
@@ -535,6 +541,8 @@ int main()
 	//initialize apple
 	getNextAppleCoordinates(appleX, appleY, offsetX, offsetY);
 
+	std::cout << "Speed: " << GetSpeed();
+
 	while (beginGame)
 	{
 		//display splash screen
@@ -603,6 +611,16 @@ int main()
 
 	system("cls");
 	gameOverScreen();
+	// Wait for the player to press Enter or Spacebar
+	while (true)
+	{
+		char key = _getch(); // Get key input
+		if (key == ' ' || key == '\r') // Check if it's Space (' ') or Enter ('\r')
+		{
+			break; 
+		}
+	}
+	highScoreDisplay(playerInitials, score);
 	return 0;
 }
 

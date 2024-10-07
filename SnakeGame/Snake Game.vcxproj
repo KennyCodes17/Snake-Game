@@ -128,6 +128,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Snake Game.cpp" />
+    <ClCompile Include="SpeedController.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="SpeedController.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
