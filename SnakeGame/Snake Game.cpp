@@ -6,7 +6,8 @@
 #include <chrono>
 #include <thread>
 #include <windows.h>
-#include "SpeedController.h"
+#include "SpeedController.h"  
+
 
 using namespace std;
 
@@ -20,6 +21,7 @@ const int width = 45;
 //offset the game board
 int offsetX = 5; // Shift 5 columns to the right
 int offsetY = 3; // Shift 3 rows down
+
 
 enum Direction
 {
@@ -540,8 +542,6 @@ int main()
 
 	//initialize apple
 	getNextAppleCoordinates(appleX, appleY, offsetX, offsetY);
-
-	std::cout << "Speed: " << GetSpeed();
 
 	while (beginGame)
 	{
