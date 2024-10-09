@@ -2,9 +2,10 @@
 #include <iostream>
 #include <windows.h> 
 
-int GetSpeed()//int score, int& currentSpeed, int minSpeed, int increasedSpeed, int& speedBeforeKeyPress, int& previousScore)
+int GetSpeed(int score, int& currentSpeed, int minSpeed, int increasedSpeed, int& speedBeforeKeyPress, int& previousScore)
 {
-    return 0;
+    currentSpeed = 50;
+    return currentSpeed;
 }
 
 /*

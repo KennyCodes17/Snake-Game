@@ -297,7 +297,7 @@ void gameScore(int& score)
 	setCursorPosition(0, 0);
 }
 
-void logic(int& appleX, int& appleY, vector<pair<int, int>>& snake, int& score, vector <std::string> playerInitials, int& currentSpeed, int minSpeed, int &badAppleX, int &badAppleY, bool &badAppleGenerated, int &badAppleCounter)
+void logic(int& appleX, int& appleY, vector<pair<int, int>>& snake, int& score, vector <std::string> playerInitials, int &badAppleX, int &badAppleY, bool &badAppleGenerated, int &badAppleCounter)
 {
 	for (size_t i = snake.size() - 1; i > 0; i--)
 	{
@@ -346,7 +346,7 @@ void logic(int& appleX, int& appleY, vector<pair<int, int>>& snake, int& score, 
 
 	setCursorPosition(40, 2); // Move the cursor just below the score
 	print("SPEED for key holding: ");
-	std::cout << currentSpeed << "ms"; // Print the current speed
+	//std::cout << currentSpeed << "ms"; // Print the current speed
 
 	//END GAME if collides with border
 	if (checkBorder(snake[0].first, snake[0].second))
@@ -362,7 +362,8 @@ void logic(int& appleX, int& appleY, vector<pair<int, int>>& snake, int& score, 
 		//update game score
 		gameScore(score);
 		//adjust the speed based on score
-		currentSpeed = adjustSpeedForScore(score, currentSpeed, minSpeed);
+		//currentSpeed = GetSpeed(score, speed, minSpeed, increasedSpeed, speedBeforeKeyPress, previousScore);
+
 	}
 	// check score has reached a multiple of 50
 	// if so, generate a bad apple and await collision
@@ -588,11 +589,11 @@ int main()
 			setCursorPosition(offsetX, height + offsetY + 1);
 			print("                                                   ");
 			// Call adjustSpeedForKeyHold to manage the speed adjustment logic
-			speed = adjustSpeedForKeyHold(speed, minSpeed, increasedSpeed, speedBeforeKeyPress);
+			//speed = adjustSpeedForKeyHold(speed, minSpeed, increasedSpeed, speedBeforeKeyPress);
 
 			// Update the lastKey to the current key
 			lastKey = currentKey;
-			logic(appleX, appleY, snake, score, playerInitials, speed, minSpeed, badAppleX, badAppleY, badAppleGenerated, badAppleCounter);
+			logic(appleX, appleY, snake, score, playerInitials, badAppleX, badAppleY, badAppleGenerated, badAppleCounter);
 			draw(appleX, appleY, snake, offsetX, offsetY, badAppleX, badAppleY);
 			std::this_thread::sleep_for(std::chrono::milliseconds(speed));
 
