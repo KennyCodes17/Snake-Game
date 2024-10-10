@@ -161,10 +161,14 @@ void getNextAppleCoordinates(int& appleX, int& appleY, int offsetX, int offsetY)
 	appleY = rand() % (height - offsetY - 2) + offsetY + 1;
 }
 
-void getNextBadAppleCoordinates(int& badAppleX, int& badAppleY, int offsetX, int offsetY)
+void getNextBadAppleCoordinates(int& badAppleX, int& badAppleY, int appleX, int appleY, int offsetX, int offsetY)
 {
+	do {
+		// Generate random coordinates for the bad apple
 		badAppleX = rand() % (width - offsetX - 2) + offsetX + 1;
 		badAppleY = rand() % (height - offsetY - 2) + offsetY + 1;
+
+	} while (badAppleX == appleX && badAppleY == appleY);  // Ensure the bad apple is not on the same spot as the good apple
 }
 
 bool drawBadApple(int x, int y, int badAppleX, int badAppleY)
@@ -297,7 +301,7 @@ void gameScore(int& score)
 	setCursorPosition(0, 0);
 }
 
-void logic(int& appleX, int& appleY, vector<pair<int, int>>& snake, int& score, vector <std::string> playerInitials, int &badAppleX, int &badAppleY, bool &badAppleGenerated, int &badAppleCounter)
+void logic(int& appleX, int& appleY, vector<pair<int, int>>& snake, int& score, vector <std::string> playerInitials, int &badAppleX, int &badAppleY, bool &badAppleGenerated, int &badAppleCounter, int& previousScore)
 {
 	for (size_t i = snake.size() - 1; i > 0; i--)
 	{
@@ -344,10 +348,6 @@ void logic(int& appleX, int& appleY, vector<pair<int, int>>& snake, int& score, 
 	print("SCORE: ");
 	std::cout << score;
 
-	setCursorPosition(40, 2); // Move the cursor just below the score
-	print("SPEED for key holding: ");
-	//std::cout << currentSpeed << "ms"; // Print the current speed
-
 	//END GAME if collides with border
 	if (checkBorder(snake[0].first, snake[0].second))
 	{
@@ -361,15 +361,12 @@ void logic(int& appleX, int& appleY, vector<pair<int, int>>& snake, int& score, 
 		addSnakeSegment(snake);
 		//update game score
 		gameScore(score);
-		//adjust the speed based on score
-		//currentSpeed = GetSpeed(score, speed, minSpeed, increasedSpeed, speedBeforeKeyPress, previousScore);
-
 	}
 	// check score has reached a multiple of 50
 	// if so, generate a bad apple and await collision
 	if (score % 10 == 0 && score != 0 && !badAppleGenerated)
 	{
-		getNextBadAppleCoordinates(badAppleX, badAppleY, offsetX, offsetY);
+		getNextBadAppleCoordinates(badAppleX, badAppleY, appleX, appleY,offsetX, offsetY);
 		badAppleGenerated = true;  //No new bad apple is generated until collision
 	}
 	if (badAppleCollision(badAppleX, badAppleY, snake))
@@ -384,11 +381,10 @@ void logic(int& appleX, int& appleY, vector<pair<int, int>>& snake, int& score, 
 		}
 	}
 }
-
-vector <std::string> collectUserName()
+vector<std::string> collectUserName()
 {
 	std::string input;
-	vector <std::string> initials;
+	vector<std::string> initials;
 
 	// Print the stylized message
 	print(" SNAKESNAKESNAKESNAKESNAKESNAKESNAKES\n");
@@ -399,18 +395,27 @@ vector <std::string> collectUserName()
 
 	setCursorPosition(11 + offsetX, 3);
 
-	// Get the initials input from the user
-	std::cin >> input;
-	initials.push_back(input);
+	// Get the initials input from the user, ensure input is not empty
+	while (input.empty())
+	{
+		std::cin >> input;  // Get input from user
+
+		if (input.empty())  // If input is empty, keep the cursor in the same place
+		{
+			setCursorPosition(11 + offsetX, 3);  // Reset cursor position
+		}
+	}
+
+	initials.push_back(input);  // Store the valid initials
 
 	// Clear the area below or reposition the cursor for the next message
-	setCursorPosition(6, 8 ); // Move cursor below the rectangle
+	setCursorPosition(6, 8);  // Move cursor below the rectangle
 	print("Press 'Enter' to continue: ");
 
 	// Wait for the user to press Enter
 	while (true)
 	{
-		if (_getch() == '\r') // Check for Enter key
+		if (_getch() == '\r')  // Check for Enter key
 		{
 			break;
 		}
@@ -533,7 +538,8 @@ int main()
 	bool beginGame = true;
 	char keyEnter;
 	int score = 0;
-	int speed = 800;
+	int previousScore = 0;
+	int speed = 500;
 	int speedBeforeKeyPress = speed;
 	int increasedSpeed = 50;
 	int minSpeed = 50;
@@ -590,12 +596,17 @@ int main()
 			print("                                                   ");
 			// Call adjustSpeedForKeyHold to manage the speed adjustment logic
 			//speed = adjustSpeedForKeyHold(speed, minSpeed, increasedSpeed, speedBeforeKeyPress);
+			speed = GetSpeed(score, speed, minSpeed, increasedSpeed, speedBeforeKeyPress, previousScore);
 
 			// Update the lastKey to the current key
 			lastKey = currentKey;
-			logic(appleX, appleY, snake, score, playerInitials, badAppleX, badAppleY, badAppleGenerated, badAppleCounter);
+			logic(appleX, appleY, snake, score, playerInitials, badAppleX, badAppleY, badAppleGenerated, badAppleCounter, previousScore);
 			draw(appleX, appleY, snake, offsetX, offsetY, badAppleX, badAppleY);
 			std::this_thread::sleep_for(std::chrono::milliseconds(speed));
+
+			setCursorPosition(40, 2); // Move the cursor just below the score
+			print("Adjusted Speed is: ");
+			std::cout << speed << "ms"; // Print the current speed
 
 			if (checkSnakeSelfCollision(snake))
 			{
